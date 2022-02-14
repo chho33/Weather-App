@@ -54,7 +54,7 @@ const HoursAnnotation = tempHours => {
       })
       annotations.push({
         type: 'text',
-        content: `${ele.pop*100}%`,
+        content: `${parseInt(ele.pop*100)}%`,
         position: (xScale) => {
           return [`${xScale.scale(ele.date) * 100}%`, '95%']
         },
