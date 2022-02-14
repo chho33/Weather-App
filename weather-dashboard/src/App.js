@@ -54,7 +54,7 @@ const HoursAnnotation = tempHours => {
       })
       annotations.push({
         type: 'text',
-        content: `${ele.pop}%`,
+        content: `${ele.pop*100}%`,
         position: (xScale) => {
           return [`${xScale.scale(ele.date) * 100}%`, '95%']
         },
@@ -120,7 +120,7 @@ const App = () => {
   const hoursConfig = {
     xField: 'date',
     yField: 'temp',
-    width: 630,
+    width: 700,
     height: 155,
     autoFit: true,
     label: false,
@@ -154,7 +154,7 @@ const App = () => {
           <Spacer />
         </Flex>
         <Flex align="left" justify="left" pl='5' pr='5' pt='5' h='120px' mt='-3'>
-          <Box w='110px' p='1' ml='-7'>
+          <Box w='110px' p='1' ml='-5'>
             {temp? <Image src={temp.icon} alt='Weather Icon' />: <Spinner align='center'/>}
           </Box>
           <Box w='180px' p='1.5' align="left">
