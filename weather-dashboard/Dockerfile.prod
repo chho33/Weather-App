@@ -1,0 +1,13 @@
+# build environment
+FROM node:16.6.2-alpine as builder
+WORKDIR /code
+ENV PATH /code/node_modules/.bin:$PATH
+COPY . /code/
+RUN npm ci --silent
+RUN npm run build
+
+# production environment
+FROM nginx:stable-alpine
+COPY --from=builder /code/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

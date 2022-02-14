@@ -1,0 +1,7 @@
+config.example
+.python-version
+sql_app.db
+__pycache__
+.dockerignore
+Dockerfile
+Dockerfile.prod

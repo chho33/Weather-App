@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+
+  frontend:
+    container_name: weather-frontend
+    image: weather-frontend
+    build:
+      context: ./weather-dashboard
+      dockerfile: Dockerfile.prod
+    ports:
+      - '80:80'
+
+  backend:
+    container_name: weather-backend
+    image: weather-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
