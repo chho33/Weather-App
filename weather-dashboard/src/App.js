@@ -44,7 +44,7 @@ const HoursAnnotation = tempHours => {
         position: (xScale, yScale) => {
           return [
             `${xScale.scale(ele.date) * 100}%`,
-            `${(0.95 - yScale.temp.values[idx] / yScale.temp.ticks[yScale.temp.ticks.length-1]) * 100}%`
+            `${Math.max(0, (0.95 - yScale.temp.values[idx] / yScale.temp.ticks[yScale.temp.ticks.length-1]) * 100)}%`
           ]
         },
         style: {
@@ -54,7 +54,7 @@ const HoursAnnotation = tempHours => {
       })
       annotations.push({
         type: 'text',
-        content: `${parseInt(ele.pop*100)}%`,
+        content: `${parseInt(ele.pop * 100)}%`,
         position: (xScale) => {
           return [`${xScale.scale(ele.date) * 100}%`, '95%']
         },
@@ -76,25 +76,36 @@ const App = () => {
   const [temp, setTemp] = useState()
   const [tempDaily, setTempDaily] = useState()
   const [tempHours, setTempHours] = useState()
-  const cityOptionDefalt = {name: "No Valid City", isDisabled: true, lat: null, lon: null, city: null, country: null}
-  const [cityOptions, setCityOptions] = useState([cityOptionDefalt])
+  const cityOptionDefault = {name: "No Valid City", isDisabled: true, lat: null, lon: null, city: null, country: null}
+  const [cityOptions, setCityOptions] = useState([cityOptionDefault])
 
   const cityRef = useRef(null)
+
 
   useEffect(() => {
     fetch(`${config.protocol}://${config.host}:${config.port}/get_weather`)
     .then(response => response.json())
     .then(response => {
       setTemp(response.current)
-      setTempDaily(null)
+      setCurrentTime(new Date((new Date()).toLocaleString('en-US', { timeZone: response.timezone })))
       setTempDaily(response.daily)
-      setTempHours(null)
       setTempHours(response.hourly)
-      setCurrentTime(new Date())
     })
   }, [])
 
-  const onCityInputChange = (event) => cityRef.current = event.target.value
+  const hoursConfig = {
+    xField: 'date',
+    yField: 'temp',
+    width: 700,
+    height: 155,
+    autoFit: true,
+    label: false,
+    yAxis: {grid: null},
+    areaStyle: {fill: '#FFC0CB'},
+    color: '#EBACB7'
+  }
+
+  const onCityInputChange = event => cityRef.current = event.target.value
 
   const handleCityInput = () => {
     fetch(`${config.protocol}://${config.host}:${config.port}/get_cities/${cityRef.current}`)
@@ -109,24 +120,13 @@ const App = () => {
     .then(response => response.json())
     .then(response => {
       setTemp(response.current)
+      setCurrentTime(new Date((new Date()).toLocaleString('en-US', { timeZone: response.timezone })))
       setTempDaily(null)
       setTempDaily(response.daily)
-      setCurrentTime(new Date())
-      setCityOptions([cityOptionDefalt])
+      setTempHours(response.hourly)
+      setCityOptions(null)
+      setCityOptions([cityOptionDefault])
     })
-  }
-
-  
-  const hoursConfig = {
-    xField: 'date',
-    yField: 'temp',
-    width: 700,
-    height: 155,
-    autoFit: true,
-    label: false,
-    yAxis: {grid: null},
-    areaStyle: {fill: '#FFC0CB'},
-    color: '#EBACB7'
   }
 
 
@@ -143,11 +143,11 @@ const App = () => {
               <MenuInput mr="0.5" pb="1" onChange={onCityInputChange} />
               <MenuButton mb="0.5" as={IconButton} icon={<SearchIcon />} onClick={handleCityInput}></MenuButton>
               <MenuList>
-                {cityOptions.map(option => (
+                {cityOptions? cityOptions.map(option => (
                   <MenuItem key={option.name} isDisabled={option.isDisabled} onClick={() => handleCitySearch(option.lat, option.lon, option.city, option.country)}>
                     {option.name}
-                  </MenuItem>
-                ))}
+                  </MenuItem> 
+                )): <MenuItem></MenuItem>}
               </MenuList>
             </Menu>
           </Box>
@@ -174,18 +174,18 @@ const App = () => {
         </Flex>
         <Flex fontSize="xl" align="left" justify="left" h="20px" pl='5' pr='5' mt='2'>
           {temp?
-          <Text>{temp.descrip} • {weekday[currentTime.getDay()]} {currentTime.getDate()}, {currentTime.getHours()}:{currentTime.getMinutes()}</Text>
+          <Text>{temp.descrip} • {weekday[currentTime.getDay()]} {String(currentTime.getDate()).padStart(2, '0')}, {String(currentTime.getHours()).padStart(2, '0')}:{String(currentTime.getMinutes()).padStart(2, '0')}</Text>
           : <Spinner align='center'/>}
         </Flex>
         <Flex align="left" justify="left" p='5' mt='2'>
           {tempDaily? tempDaily.map(ele => (
-              <Box key={ele.date} bg='gray.100' h='155px' p='1' m='0.5' flex='1' align="center">
+              <Box key={ele.date} h='155px' p='1' m='0.5' flex='1' align="center">
                   <Text fontSize='md'> {ele.date}</Text>
                   <Image boxSize='70px' src={ele.icon} alt='Weather Icon' />
-                  <Text fontSize='md'> {ele.tempMax}</Text>
-                  <Text fontSize='md'> {ele.tempMin}</Text>
+                  <Text fontSize='md'> {ele.tempMax}°</Text>
+                  <Text fontSize='md'> {ele.tempMin}°</Text>
               </Box>
-            )) : <Spinner size='xl' align='center'/>}
+            )): <Spinner size='xl' align='center'/>}
         </Flex>
         <Flex align="left" justify="left" pl='5' pr='5' pb='5' mt='2'>
           {tempHours? <Area data={tempHours} annotations={HoursAnnotation(tempHours)} {...hoursConfig} />: <Spinner size='xl'/>}

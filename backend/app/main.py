@@ -75,9 +75,10 @@ async def get_weather(request: Request, lat: Optional[str] = None, lon: Optional
     async with aiohttp.ClientSession() as sess:
         async with sess.get(api) as res:
             res = await res.json()
-    current, daily, hourly = res["current"], res["daily"], res["hourly"]
+    current, daily, hourly, timezone = res["current"], res["daily"], res["hourly"], res["timezone"]
 
     return {
+        "timezone": timezone,
         "current": {
             "city": city,
             "country": country,
@@ -90,7 +91,7 @@ async def get_weather(request: Request, lat: Optional[str] = None, lon: Optional
         },
         "daily": [
             {
-                "date": epoch_to_date(rec["dt"]),
+                "date": epoch_to_date(rec["dt"], timezone),
                 "tempMin": rec["temp"]["min"],
                 "tempMax": rec["temp"]["max"],
                 "icon": f'http://openweathermap.org/img/wn/{rec["weather"][0]["icon"]}@2x.png'
@@ -98,7 +99,7 @@ async def get_weather(request: Request, lat: Optional[str] = None, lon: Optional
         ],
         "hourly": [
             {
-                "date": epoch_to_hour(rec["dt"]),
+                "date": epoch_to_hour(rec["dt"], timezone),
                 "temp": rec["temp"],
                 "pop": rec["pop"]
             } for rec in hourly[:24]
